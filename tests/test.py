@@ -173,15 +173,25 @@ def test_signing_and_verification(public_key: mprsa.PublicKey, private_key: mprs
     debug_print('Signing {lorem_ipsum_len} bytes of Lorem Ipsum using {hashing_algorithm} for hashing'.format(lorem_ipsum_len=len(LOREM_IPSUM), hashing_algorithm=hashing_algorithm))
     signature_encrypted = private_key.sign(LOREM_IPSUM, hashing_algorithm)
 
-    debug_print('Verifying the signature of the previously signed message')
+    debug_print('Verifying (without pre-computed hash) the signature of the previously signed message')
     verification_result = public_key.verify(LOREM_IPSUM, signature_encrypted)
 
     debug_print('Verifying signing/verification were successful')
-    assert verification_result[0], 'Test failure: Signature verification with {hashing_algorithm} hashing was unsuccessful.  This could result from a problem with signing, verification, or both.'.format(hashing_algorithm=hashing_algorithm)
-    assert verification_result[1] == hashing_algorithm, 'Test failure: Signature verification hash function does not match original input of {hashing_algorithm}.  This could result from a problem with signing, verification, or both.'.format(hashing_algorithm=hashing_algorithm)
+    assert verification_result[0], 'Test failure: Signature verification (without pre-computed hash) with {hashing_algorithm} hashing was unsuccessful.  This could result from a problem with signing, verification, or both.'.format(hashing_algorithm=hashing_algorithm)
+    assert verification_result[1] == hashing_algorithm, 'Test failure: Signature verification hashing function does not match original input of {hashing_algorithm}.  This could result from a problem with signing, verification, or both.'.format(hashing_algorithm=hashing_algorithm)
 
-    debug_print('Verifying the {hashing_algorithm} hash function used by signing/verification produces the expected result'.format(hashing_algorithm=hashing_algorithm))
-    assert binascii.hexlify(mprsa.compute_hash(LOREM_IPSUM, hashing_algorithm)) == LOREM_IPSUM_HASHES[hashing_algorithm]
+    debug_print('Pre-computing {hashing_algorithm} hash on {lorem_ipsum_len} bytes of Lorem Ipsum'.format(hashing_algorithm=hashing_algorithm, lorem_ipsum_len=len(LOREM_IPSUM)))
+    lorem_ipsum_hash = mprsa.compute_hash(LOREM_IPSUM, hashing_algorithm)
+
+    debug_print('Verifying (with pre-computed hash) the signature of the previously signed message')
+    verification_result = public_key.verify_hash(lorem_ipsum_hash, signature_encrypted)
+
+    debug_print('Verifying signing/verification were successful')
+    assert verification_result[0], 'Test failure: Signature verification (with pre-computed hash) with {hashing_algorithm} hashing was unsuccessful.  This could result from a problem with signing, verification, or both.'.format(hashing_algorithm=hashing_algorithm)
+    assert verification_result[1] == hashing_algorithm, 'Test failure: Signature verification hashing function does not match original input of {hashing_algorithm}.  This could result from a problem with signing, verification, or both.'.format(hashing_algorithm=hashing_algorithm)
+
+    debug_print('Verifying the {hashing_algorithm} hashing function used by signing/verification produces the expected result'.format(hashing_algorithm=hashing_algorithm))
+    assert binascii.hexlify(lorem_ipsum_hash) == LOREM_IPSUM_HASHES[hashing_algorithm]
 
 
 def main(test_loops: int = 1, debug: bool = False):

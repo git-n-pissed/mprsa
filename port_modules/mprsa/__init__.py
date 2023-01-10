@@ -148,12 +148,12 @@ def _int_to_bytes(unsigned_integer: int, fill_size: typing.Optional[int] = None)
     return raw_bytes
 
 
-def _pad_for_encryption(message_decrypted: bytes, target_len: int) -> bytes:
+def _pad_for_encryption(msg_decrypted: bytes, target_len: int) -> bytes:
     """
     Pads the message for encryption, returning the padded message.  The padding bytes are always random.
 
     Args:
-        message_decrypted (bytes): The message to pad.
+        msg_decrypted (bytes): The message to pad.
 
         target_len (int): The target length of the padded message.
 
@@ -162,7 +162,7 @@ def _pad_for_encryption(message_decrypted: bytes, target_len: int) -> bytes:
     """
 
     max_msg_len = target_len - 11
-    msg_len = len(message_decrypted)
+    msg_len = len(msg_decrypted)
 
     if msg_len > max_msg_len:
         raise OverflowError('Message requires {msg_len} bytes, but there is only space for a message of {max_msg_len} bytes'.format(msg_len=msg_len, max_msg_len=max_msg_len))
@@ -184,15 +184,15 @@ def _pad_for_encryption(message_decrypted: bytes, target_len: int) -> bytes:
 
     assert len(padding) == padding_len
 
-    return b''.join([b'\x00\x02', padding, b'\x00', message_decrypted])
+    return b''.join([b'\x00\x02', padding, b'\x00', msg_decrypted])
 
 
-def _pad_for_signing(message: bytes, target_len: int) -> bytes:
+def _pad_for_signing(msg: bytes, target_len: int) -> bytes:
     """
     Pads the message for signing, returning the padded message.  The padding bytes are always "FF".
 
     Args:
-        message (bytes): The message to pad.
+        msg (bytes): The message to pad.
 
         target_len (int): The target length of the padded message.
 
@@ -201,14 +201,14 @@ def _pad_for_signing(message: bytes, target_len: int) -> bytes:
     """
 
     max_msg_len = target_len - 11
-    msg_len = len(message)
+    msg_len = len(msg)
 
     if msg_len > max_msg_len:
         raise OverflowError('Message requires {msg_len} bytes, but there is only space for a message of {max_msg_len} bytes'.format(msg_len=msg_len, max_msg_len=max_msg_len))
 
     padding_len = target_len - msg_len - 3
 
-    return b''.join([b'\x00\x01', padding_len * b'\xff', b'\x00', message])
+    return b''.join([b'\x00\x01', padding_len * b'\xff', b'\x00', msg])
 
 
 def _pem_to_der(pem_data: typing.Union[bytes, str], pem_marker: typing.Union[bytes, str]) -> bytes:
@@ -362,14 +362,14 @@ class AbstractKey(object):
             result (bytes): Contents of a PKCS#1 PEM encoded file.
         """
 
-    def blind(self, message: int, r: int) -> int:
+    def blind(self, msg: int, r: int) -> int:
         """
         Performs blinding on the message using random number 'r'.
-        The blinding is such that `message = unblind(decrypt(blind(encrypt(message)))`.
+        The blinding is such that `msg = unblind(decrypt(blind(encrypt(msg)))`.
         See https://en.wikipedia.org/wiki/Blinding_%28cryptography%29
 
         Args:
-            message (int): The message, as integer, to blind.
+            msg (int): The message, as integer, to blind.
 
             r (int): The random number to blind with.
 
@@ -377,12 +377,12 @@ class AbstractKey(object):
             result (int): The blinded message.
         """
 
-        return (message * _mprsa.exptmod(r, self.e, self.n)) % self.n
+        return (msg * _mprsa.exptmod(r, self.e, self.n)) % self.n
 
     def unblind(self, blinded: int, r: int) -> int:
         """
         Performs unblinding on the message using random number 'r'.
-        The blinding is such that `message = unblind(decrypt(blind(encrypt(message)))`.
+        The blinding is such that `msg = unblind(decrypt(blind(encrypt(msg)))`.
         See https://en.wikipedia.org/wiki/Blinding_%28cryptography%29
 
         Args:
@@ -429,12 +429,12 @@ class PublicKey(AbstractKey):
     def __hash__(self) -> int:
         return hash((self.n, self.e))
 
-    def encrypt(self, message_decrypted: bytes) -> bytes:
+    def encrypt(self, msg_decrypted: bytes) -> bytes:
         """
         Encrypts the message using PKCS#1 v1.5.
 
         Args:
-            message_decrypted (bytes): The message to encrypt.  Must be a byte string no longer than "k - 11" bytes, where
+            msg_decrypted (bytes): The message to encrypt.  Must be a byte string no longer than "k - 11" bytes, where
                 "k" is the number of bytes needed to encode the "n" component of the public key.
 
         Returns:
@@ -442,12 +442,12 @@ class PublicKey(AbstractKey):
         """
 
         modulus_len = _mprsa.count_bytes(self.n)
-        message_decrypted_padded = _pad_for_encryption(message_decrypted, modulus_len)
-        message_decrypted_padded_int = int(binascii.hexlify(message_decrypted_padded), 16)
-        message_encrypted_int = _mprsa.exptmod(message_decrypted_padded_int, self.e, self.n)
-        message_encrypted = _int_to_bytes(message_encrypted_int, modulus_len)
+        msg_decrypted_padded = _pad_for_encryption(msg_decrypted, modulus_len)
+        msg_decrypted_padded_int = int(binascii.hexlify(msg_decrypted_padded), 16)
+        msg_encrypted_int = _mprsa.exptmod(msg_decrypted_padded_int, self.e, self.n)
+        msg_encrypted = _int_to_bytes(msg_encrypted_int, modulus_len)
 
-        return message_encrypted
+        return msg_encrypted
 
     def get_signature_hash_function(self, encrypted_signature: bytes) -> typing.Optional[str]:
         """
@@ -458,8 +458,8 @@ class PublicKey(AbstractKey):
             encrypted_signature (bytes): The encrypted signature, fully padded with ASN.1 code.
 
         Returns:
-            result (str): The hash function used on the encrypted signature, or `None` if the hash function used cannot be
-                determined.
+            result (str): The hash function used on the encrypted signature, or `None` if the hash function used cannot
+                be determined.
         """
 
         key_len = _mprsa.count_bytes(self.n)
@@ -687,21 +687,21 @@ class PublicKey(AbstractKey):
         der_data = self.get_x509_spki_der_data()
         return _der_to_pem(der_data, 'PUBLIC KEY')
 
-    def verify(self, message: typing.Union[bytes, str, typing.IO[typing.Union[bytes, str]]],
+    def verify(self, msg: typing.Union[bytes, str, typing.IO[typing.Union[bytes, str]]],
                signature_encrypted: bytes) -> typing.Tuple[bool, typing.Optional[str]]:
         """
-        Verifies that the signature matches the message.  The hash function is detected automatically from the signature,
-        but must exist as a key in `HASH_FUNCTIONS`.
+        Verifies that the signature matches the message.  The hash function is detected automatically from the
+        signature, but must exist as a key in `HASH_FUNCTIONS`.
 
         Args:
-            message (typing.Union[bytes, str, typing.IO[typing.Union[bytes, str]]]): The signed message.
+            msg (typing.Union[bytes, str, typing.IO[typing.Union[bytes, str]]]): The signed message.
 
             signature_encrypted (bytes): The encrypted signature, fully padded with ASN.1 code.
 
         Returns:
-            result (typing.Tuple[bool, typing.Optional[str]]): A two item tuple where the first item is a boolean which is
-                `True` if the message was verified, otherwise `False`, and the second item is a string identifying the hash
-                function used to sign the message, or `None` if the hash function could not be determined.
+            result (typing.Tuple[bool, typing.Optional[str]]): A two item tuple where the first item is a boolean which
+                is `True` if the message was verified, otherwise `False`, and the second item is a string identifying
+                the hash function used to sign the message, or `None` if the hash function could not be determined.
         """
 
         success = False
@@ -716,10 +716,52 @@ class PublicKey(AbstractKey):
             # Get the hash function
             hash_function = _get_hash_function(decrypted_signature)
             if hash_function:
-                message_hash = compute_hash(message, hash_function)
+                msg_hash = compute_hash(msg, hash_function)
 
                 # Reconstruct the expected padded hash
-                clear_text = HASH_FUNCTION_ASN1_CODES[hash_function] + message_hash
+                clear_text = HASH_FUNCTION_ASN1_CODES[hash_function] + msg_hash
+                expected = _pad_for_signing(clear_text, key_len)
+
+                # Compare with the signed one
+                success = expected == decrypted_signature
+
+        except:
+            pass
+
+        return success, hash_function
+
+    def verify_hash(self, hash_value: bytes,
+                    signature_encrypted: bytes) -> typing.Tuple[bool, typing.Optional[str]]:
+        """
+        Verifies that the signature matches a pre-computed hash.  The hash function is detected automatically from the
+        signature, but must exist as a key in `HASH_FUNCTIONS`.
+
+        Args:
+            hash_value (bytes): The pre-computed hash to verify.
+
+            signature_encrypted (bytes): The encrypted signature, fully padded with ASN.1 code.
+
+        Returns:
+            result (typing.Tuple[bool, typing.Optional[str]]): A two item tuple where the first item is a boolean which
+                is `True` if the pre-computed hash was verified, otherwise `False`, and the second item is a string
+                identifying the hash function used to sign the message, or `None` if the hash function could not be
+                determined.
+        """
+
+        success = False
+        hash_function = None
+
+        try:
+            key_len = _mprsa.count_bytes(self.n)
+            encrypted = int(binascii.hexlify(signature_encrypted), 16)
+            decrypted = _mprsa.exptmod(encrypted, self.e, self.n)
+            decrypted_signature = _int_to_bytes(decrypted, key_len)
+
+            # Get the hash function
+            hash_function = _get_hash_function(decrypted_signature)
+            if hash_function:
+                # Reconstruct the expected padded hash
+                clear_text = HASH_FUNCTION_ASN1_CODES[hash_function] + hash_value
                 expected = _pad_for_signing(clear_text, key_len)
 
                 # Compare with the signed one
@@ -783,69 +825,69 @@ class PrivateKey(AbstractKey):
     def __hash__(self) -> int:
         return hash((self.n, self.e, self.d, self.p, self.q, self.exp1, self.exp2, self.coef))
 
-    def blinded_decrypt(self, message_encrypted_int: int) -> int:
+    def blinded_decrypt(self, msg_encrypted_int: int) -> int:
         """
         Decrypts the message using blinding to prevent side-channel attacks.
 
         Args:
-            message_encrypted_int (int): The encrypted message as an integer.
+            msg_encrypted_int (int): The encrypted message as an integer.
 
         Returns:
             result (int): The decrypted message.
         """
 
         blind_r = _mprsa.gen_rand_int_for_blinding(self.n)
-        blinded = self.blind(message_encrypted_int, blind_r)
+        blinded = self.blind(msg_encrypted_int, blind_r)
         decrypted = _mprsa.exptmod(blinded, self.d, self.n)
         return self.unblind(decrypted, blind_r)
 
-    def blinded_encrypt(self, message_decrypted_int: int) -> int:
+    def blinded_encrypt(self, msg_decrypted_int: int) -> int:
         """
         Encrypts the message using blinding to prevent side-channel attacks.
 
         Args:
-            message_decrypted_int (int): The decrypted message as an integer.
+            msg_decrypted_int (int): The decrypted message as an integer.
 
         Return:
             result (int): The encrypted message.
         """
 
         blind_r = _mprsa.gen_rand_int_for_blinding(self.n)
-        blinded = self.blind(message_decrypted_int, blind_r)
+        blinded = self.blind(msg_decrypted_int, blind_r)
         encrypted = _mprsa.exptmod(blinded, self.d, self.n)
         return self.unblind(encrypted, blind_r)
 
-    def decrypt(self, message_encrypted: bytes) -> typing.Tuple[bool, typing.Optional[bytes]]:
+    def decrypt(self, msg_encrypted: bytes) -> typing.Tuple[bool, typing.Optional[bytes]]:
         """
         Decrypts the message using PKCS#1 v1.5.
 
         Args:
-            message_encrypted (bytes): The message to decrypt.
+            msg_encrypted (bytes): The message to decrypt.
 
         Returns:
-            result (typing.Tuple[bool, typing.Optional[bytes]]): A two item tuple where the first item is a boolean which is
-                `True` if the message was decrypted, otherwise `False`, and the second item is the decrypted message, or
-                `None` if the message could not be decrypted.
+            result (typing.Tuple[bool, typing.Optional[bytes]]): A two item tuple where the first item is a boolean
+                which is `True` if the message was decrypted, otherwise `False`, and the second item is the decrypted
+                message, or `None` if the message could not be decrypted.
         """
 
         success = False
-        message_decrypted = None
+        msg_decrypted = None
 
         try:
             modulus_len = _mprsa.count_bytes(self.n)
-            message_encrypted_int = int(binascii.hexlify(message_encrypted), 16)
-            message_decrypted_padded_int = self.blinded_decrypt(message_encrypted_int)
-            message_decrypted_padded = _int_to_bytes(message_decrypted_padded_int, modulus_len)
+            msg_encrypted_int = int(binascii.hexlify(msg_encrypted), 16)
+            msg_decrypted_padded_int = self.blinded_decrypt(msg_encrypted_int)
+            msg_decrypted_padded = _int_to_bytes(msg_decrypted_padded_int, modulus_len)
 
             # Find the 00 separator between the padding and the message
-            padding_idx = message_decrypted_padded.index(b'\x00', 2)
-            message_decrypted = message_decrypted_padded[padding_idx + 1:]
+            padding_idx = msg_decrypted_padded.index(b'\x00', 2)
+            msg_decrypted = msg_decrypted_padded[padding_idx + 1:]
             success = True
 
         except:
             pass
 
-        return success, message_decrypted
+        return success, msg_decrypted
 
     @classmethod
     def load_pkcs1_der_data(cls, der_data: bytes) -> 'PrivateKey':
@@ -1107,13 +1149,13 @@ class PrivateKey(AbstractKey):
         der_data = self.get_pkcs8_der_data()
         return _der_to_pem(der_data, 'PRIVATE KEY')
 
-    def sign(self, message: typing.Union[bytes, str, typing.IO[typing.Union[bytes, str]]],
+    def sign(self, msg: typing.Union[bytes, str, typing.IO[typing.Union[bytes, str]]],
              hash_function: typing.Literal['SHA-1', 'SHA-256']) -> bytes:
         """
-        Hashes the message and signs the hash digest with the private key.
+        Hashes the message and signs the hash digest.
 
         Args:
-            message (typing.Union[bytes, str, typing.IO[typing.Union[bytes, str]]]): The message to sign.
+            msg (typing.Union[bytes, str, typing.IO[typing.Union[bytes, str]]]): The message to sign.
 
             hash_function (typing.Literal['SHA-1', 'SHA-256']): The hash function to use.  Must exist as a key in
                 `HASH_FUNCTIONS`.
@@ -1122,12 +1164,12 @@ class PrivateKey(AbstractKey):
             result (bytes): The encrypted signature.
         """
 
-        msg_hash = compute_hash(message, hash_function)
+        msg_hash = compute_hash(msg, hash_function)
         return self.sign_hash(msg_hash, hash_function)
 
     def sign_hash(self, hash_value: bytes, hash_function: typing.Literal['SHA-1', 'SHA-256']) -> bytes:
         """
-        Signs a precomputed hash with the private key.
+        Signs a pre-computed hash.
 
         Args:
             hash_value (bytes): The pre-computed hash to sign.
@@ -1156,18 +1198,18 @@ class PrivateKey(AbstractKey):
         return signature_encrypted
 
 
-def compute_hash(message: typing.Union[bytes, str, typing.IO[typing.Union[bytes, str]]],
+def compute_hash(msg: typing.Union[bytes, str, typing.IO[typing.Union[bytes, str]]],
                  hash_function: str) -> bytes:
     """
     Hashes the message and returns the hash digest.
 
     Args:
-        message (typing.Union[bytes, str, typing.IO[typing.Union[bytes, str]]]): The message to hash.
+        msg (typing.Union[bytes, str, typing.IO[typing.Union[bytes, str]]]): The message to hash.
 
         hash_function (str): The hash function to use.  Must exist as a key in `HASH_FUNCTIONS`.
 
     Returns:
-        result (bytes): The hash digest of `message`.
+        result (bytes): The hash digest of the message.
     """
 
     if hash_function not in HASH_FUNCTIONS:
@@ -1176,10 +1218,10 @@ def compute_hash(message: typing.Union[bytes, str, typing.IO[typing.Union[bytes,
     method = HASH_FUNCTIONS[hash_function]
     hasher = method()
 
-    if hasattr(message, 'read') and hasattr(message.read, '__call__'):
+    if hasattr(msg, 'read') and hasattr(msg.read, '__call__'):
         read_size = 1024
         while True:
-            chunk = message.read(read_size)
+            chunk = msg.read(read_size)
             chunk_len = len(chunk)
 
             if chunk_len == 0:
@@ -1191,7 +1233,7 @@ def compute_hash(message: typing.Union[bytes, str, typing.IO[typing.Union[bytes,
                 break
 
     else:
-        hasher.update(message)
+        hasher.update(msg)
 
     return hasher.digest()
 

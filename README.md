@@ -8,18 +8,18 @@ The goal was to create a MicroPython module that would:
 1. Be simple to use
 2. Support loading/exporting RSA keys in common formats/structures
 3. Support generation of new keys
-4. Support signing/verification with common hashing algorithims
+4. Support signing/verification with common hashing algorithms
 5. Support encryption/decryption
 
-# Supported key formats
-- Private:
+# Supported Key Formats
+- ### Private:
   - PKCS#1 DER
   - PKCS#1 PEM
   - PKCS#8 DER
   - PKCS#8 PEM
     
 
-- Public:
+- ### Public:
   - PKCS#1 DER
   - PKCS#1 PEM
   - X.509/SPKI DER
@@ -28,11 +28,11 @@ The goal was to create a MicroPython module that would:
 The OpenSSL commands used to generate supported keys are contained in the docstrings for the
 functions that operate on those keys.
 
-# Supported hashing algorithims
+# Supported Hashing Algorithms
 - SHA-1
 - SHA-256
 
-# How to build:
+# How to Build
 1. Clone or copy the repo.
 2. Copy the contents (not the actual directory) of the `port_modules` directory into the `modules` directory of the
    MicroPython port you are building for.
@@ -47,16 +47,18 @@ functions that operate on those keys.
     ```
 
 # Examples
-  See `tests/test.py`
+  See [test.py](https://github.com/git-n-pissed/mprsa/blob/master/tests/test.py)
   
 # Supported Hardware
 Hardware for which it has been confirmed this module works on is listed below.  If you are willing to try the module
-out on other hardware and run `tests/test.py` to verify it works, that would be appreciated.  Make an issue with your
-findings and I'll update this `README.md`, or make a PR which updates this section of the `README.md`.
+out on other hardware and run [test.py](https://github.com/git-n-pissed/mprsa/blob/master/tests/test.py) to verify it
+works, that would be appreciated.  Make an issue with your findings and I'll update this
+[README.md](https://github.com/git-n-pissed/mprsa/blob/main/README.md), or make a PR which updates this section of the
+[README.md](https://github.com/git-n-pissed/mprsa/blob/main/README.md).
 
 * ESP32-S3
 
-# Known limitations
+# Known Limitations
 - Key generation speed
   - Even when using Toms Fast Math, generating a key of any size that can offer real security is slow.  The `gen_key`
     function defaults to the fastest possible options for key generation (i.e. allowing modulus "n" to be of slightly
