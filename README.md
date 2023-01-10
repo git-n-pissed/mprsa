@@ -1,6 +1,6 @@
 # Description
 This module is a mash-up of [python-rsa](https://github.com/sybrenstuvel/python-rsa),
-[Toms Fast Math](https://github.com/libtom/tomsfastmath) (ported to MicroPython by the
+[Toms Fast Math](https://github.com/libtom/tomsfastmath) (ported to MicroPython by
 [Damiano Mazzella](https://github.com/dmazzella), the author of [ucrypto](https://github.com/dmazzella/ucrypto)),
 and [python-asn1](https://github.com/andrivet/python-asn1).
 The goal was to create a MicroPython module that would:
