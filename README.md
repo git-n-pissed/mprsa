@@ -8,8 +8,8 @@ The goal was to create a MicroPython module that would:
 1. Be simple to use
 2. Support loading/exporting RSA keys in common formats/structures
 3. Support generation of new keys
-4. Support signing/verification with common hashing algorithms
-5. Support encryption/decryption
+4. Support signing/verification with blinding using common hashing algorithms
+5. Support encryption/decryption with blinding
 
 # Supported Key Formats
 - ### Private:
