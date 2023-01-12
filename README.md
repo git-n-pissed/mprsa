@@ -40,13 +40,12 @@ functions that operate on those keys.
    easier to simply have a `user_c_modules` directory inside the MicroPython directory which contains all the user C
    modules I want to build.  This way you can simply make sure any other user C modules are included in the
    `micropython.cmake` in that directory.
-<br/>
-<br/>
-   ![mprsa user_c_module directory placement](README_images/mprsa_user_c_modules_directory_placement.png)
-<br/>
-<br/>
-4. Run a command similar to this.  This command is based on the directory structure shown in the picture above.  The
-   command you need to run may change based on your port, board, and directory structure:
+
+    ![mprsa user_c_module directory placement](README_images/mprsa_user_c_modules_directory_placement.png)
+
+4. Run a command similar to this.  This command is based on the `user_c_modules` being placed as shown in the
+   directory structure in the picture above.  The command you need to run may change based on your port, board, and
+   directory structure:
     ```bash
     make -j8 BOARD=GENERIC_S3 USER_C_MODULES="$(pwd)/micropython/user_c_modules/mprsa/micropython.cmake" -C "$(pwd)/micropython/ports/esp32"
     ```
