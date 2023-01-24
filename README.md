@@ -54,13 +54,43 @@ functions that operate on those keys.
   See [test.py](https://github.com/git-n-pissed/mprsa/blob/master/tests/test.py)
   
 # Supported Hardware
-Hardware for which it has been confirmed this module works on is listed below.  If you are willing to try the module
-out on other hardware and run [test.py](https://github.com/git-n-pissed/mprsa/blob/master/tests/test.py) to verify it
-works, that would be appreciated.  Make an issue with your findings and I'll update this
+Hardware which this module has been tested on is listed below with :heavy_check_mark: if it worked, and :x: if it didn't
+work.  If you are willing to try the module out on other hardware and run
+[test.py](https://github.com/git-n-pissed/mprsa/blob/master/tests/test.py) to verify it works, that would be appreciated.
+Make an issue with your findings and I'll update this
 [README.md](https://github.com/git-n-pissed/mprsa/blob/main/README.md), or make a PR which updates this section of the
 [README.md](https://github.com/git-n-pissed/mprsa/blob/main/README.md).
 
-* ESP32-S3
+<table>
+  <thead>
+    <tr>
+      <th nowrap>Device</th>
+      <th nowrap>Works</th>
+      <th nowrap>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td nowrap>ESP32</td>
+      <td>:heavy_check_mark:</td>
+      <td>
+        <ul>
+          <li>Requires a more aggressive garbage collection threshold than stock.  Tested and working with <code>gc.threshold(1024)</code></li>
+          <li>Max key size is 2048-bits.  This can likely be increased by tweaking <code>tfm.h</code>, specifically the value of <code>FP_SIZE</code>.</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td nowrap>ESP32-S3</td>
+      <td>:heavy_check_mark:</td>
+      <td>
+        <ul>
+          <li>Max key size is 2048-bits.  This can likely be increased by tweaking <code>tfm.h</code>, specifically the value of <code>FP_SIZE</code>.</li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 # Known Limitations
 - Key generation speed
