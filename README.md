@@ -76,30 +76,27 @@ Make an issue with your findings and I'll update this
       <td>
         <ul>
           <li>Requires a more aggressive garbage collection threshold than stock.  Tested and working with <code>gc.threshold(1024)</code></li>
-          <li>Max key size is 2048-bits.  This can likely be increased by tweaking <code>tfm.h</code>, specifically the value of <code>FP_SIZE</code>.</li>
         </ul>
       </td>
     </tr>
     <tr>
       <td nowrap>ESP32-S3</td>
       <td>:heavy_check_mark:</td>
-      <td>
-        <ul>
-          <li>Max key size is 2048-bits.  This can likely be increased by tweaking <code>tfm.h</code>, specifically the value of <code>FP_SIZE</code>.</li>
-        </ul>
-      </td>
+      <td></td>
     </tr>
   </tbody>
 </table>
 
 # Known Limitations
-- Key generation speed
+- Key Generation Speed
   - Even when using Toms Fast Math, generating a key of any size that can offer real security is slow.  The `gen_key`
     function defaults to the fastest possible options for key generation (i.e. allowing modulus "n" to be of slightly
     fewer bits than specified and not requiring "p" and "q" to be safe primes), but generating a 2048-bit key on an
     ESP32-S3 still takes 3 - 5 minutes.  When a modulus "n" of an exact size and/or "p" and "q" values which are safe
     primes are desired, the time to generate keys increases dramatically.  In the case of 2048-bit keys sometimes 30
     minutes, sometimes an hour or more.
+- Key Size
+  - Max key size is 2048-bits.  This can likely be increased by tweaking [tfm.h](https://github.com/git-n-pissed/mprsa/blob/main/user_c_modules/mprsa/tfm/tfm_mpi.h), specifically the value of `FP_SIZE`.
 
 # Licenses
 All the code in this module is copyright under the Apache License, the MIT License, or is public domain.
